@@ -1,0 +1,17 @@
+<h1>Login</h1>
+
+<form [formGroup]="messageForm" (ngSubmit)="onSubmit(messageForm.controls.name.value)">
+
+  <h5 *ngIf="success">Your form is valid!</h5>
+
+  <label>
+    Username:
+    <input type="text" formControlName="name">
+    <div *ngIf="submitted && messageForm.controls.name.errors" class="error">
+      <div *ngIf="messageForm.controls.name.errors.required">Your name is required</div>
+    </div>
+  </label>
+
+  <input type="submit" value="Submit Username" class="cta">
+
+</form>

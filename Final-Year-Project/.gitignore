@@ -1,0 +1,14 @@
+thishasSideBar/*
+
+.classpath
+.DS_Store
+.factorypath
+.idea
+.project
+.settings
+.springBeans
+.vscode
+bin
+target
+*.log
+*.iml
