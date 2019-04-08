@@ -7,16 +7,8 @@ import { Component } from '@angular/core';
 })
 
 export class AppComponent {
-  title = 'newfrontend';
   username: string;
+  isLoggedIn = false;
 
   constructor() {}
-
-  getUsername() {
-    return this.username;
-  }
-
-  setUsername(username: string) {
-    this.username = username;
-  }
 }

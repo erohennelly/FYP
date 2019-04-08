@@ -16,17 +16,13 @@ public class BeeModel extends BasicGameObject {
     private PlayerModel creator;
 
     public void beesMoveTowardsTarget(double delta) {
+        if (target.isAlive == false) {
+            isAlive = false;
+            return;
+        }
         double angle = Math.atan2((target.getYPos() - yPos),(target.getXPos() - xPos));
         xPos += (delta/5 * Math.cos(angle));
         yPos += (delta/5 * Math.sin(angle));
-    }
-
-    public void checkIfReachedTarget() {
-        if (Math.abs(yPos - target.getYPos()) < length &&
-                Math.abs(xPos - target.getXPos()) < length) {
-            target.playerHit(points, length);
-            isAlive = false;
-        }
     }
 
     public void checkIfHitFlower(ArrayList<FlowerModel> flowerModels) {
@@ -39,7 +35,9 @@ public class BeeModel extends BasicGameObject {
 
     public void checkIfHitPlayer(HashMap<UUID, PlayerModel> players) {
         players.values().forEach(player -> {
-            if (!player.equals(creator) && Point2D.distance(xPos, yPos, player.getXPos(), player.getYPos()) < (length + player.getLength())) {
+            Double minDistance = length + player.getLength() > 20 ?  length + player.getLength() : 20;
+
+            if (!player.equals(creator) && Point2D.distance(xPos, yPos, player.getXPos(), player.getYPos()) < minDistance) {
                 player.playerHit(points, length);
                 isAlive = false;
             }

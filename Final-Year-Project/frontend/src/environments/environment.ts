@@ -4,7 +4,11 @@
 
 export const environment = {
   production: false,
-  ws_url: 'http://localhost:8000/game'
+  // url: 'http://13.59.187.128',
+  url: 'http://13.59.187.128:8080',
+  ws_url: 'http://13.59.187.128/game'
+  // url: 'http://localhost:8080',
+  // ws_url: 'http://localhost:8000/game'
 };
 
 /*

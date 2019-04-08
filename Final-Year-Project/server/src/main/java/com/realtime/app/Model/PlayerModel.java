@@ -4,13 +4,19 @@ import com.realtime.app.Model.ServerMessages.PlayerMovementModel;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.persistence.*;
+
 @Slf4j
 @Data
+@Table(name="users")
+@Entity
 public class PlayerModel extends BasicGameObject {
+    @Id
     protected String userName;
     private String password;
     protected boolean isAlive = true;
     protected String[] color;
+    protected double totalPoints;
 
     public void updatePosition(PlayerMovementModel positionUpdate){
         xPos += positionUpdate.getXMovement();

@@ -4,6 +4,7 @@ import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.SocketIONamespace;
 import com.corundumstudio.socketio.SocketIOServer;
 import com.corundumstudio.socketio.listener.DisconnectListener;
+import com.google.common.base.Strings;
 import com.realtime.app.Model.ServerMessages.ServerMessage;
 import com.realtime.app.Service.GameService;
 import com.corundumstudio.socketio.listener.DataListener;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Component;
 import javax.swing.*;
 import java.util.HashMap;
 import java.util.TimerTask;
+import java.util.UUID;
 
 @Slf4j
 @Component
@@ -30,7 +32,7 @@ public class GameController {
         this.namespace = server.addNamespace("/game");
         this.namespace.addEventListener("playerJoined", String.class, processPlayerJoined());
         this.namespace.addEventListener("updatePlayerPosition", ServerMessage.class, processPlayerMovement());
-//        this.namespace.addEventListener("playerLeft", String.class, processsPlayerLeft());
+        this.namespace.addEventListener("playerLeft", String.class, processsPlayerLeft());
         this.namespace.addDisconnectListener(onDisconnected());
         startGame();
         }
@@ -57,13 +59,15 @@ public class GameController {
             };
         };
 
-//    private DataListener<String> processsPlayerLeft() {
-//        return (client, userName, ackRequest) -> {
-//            gameService.removePlayer(userName);
-//
-//            namespace.getBroadcastOperations().sendEvent("mapUpdate", gameService.getGameState().socketMessage());
-//        };
-//    };
+    private DataListener<String> processsPlayerLeft() {
+        return (client, id, ackRequest) -> {
+            PlayerModel playerModel = clientIdToPlayerMapping.get(client);
+            if (playerModel != null) {
+                gameService.removePlayer(playerModel.getId());
+            }
+            namespace.getBroadcastOperations().sendEvent("mapUpdate", gameService.getGameState().socketMessage());
+        };
+    };
 
     private DisconnectListener onDisconnected() {
         return client -> {

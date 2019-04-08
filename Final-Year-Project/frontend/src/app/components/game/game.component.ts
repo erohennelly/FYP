@@ -29,6 +29,8 @@ export class GameComponent implements OnInit {
   public context: CanvasRenderingContext2D;
   private width = 1500;
   private height = 700;
+  private mouseXLocation = 0;
+  private mouseYLocation = 0;
   private player: Player;
   private playerArray: Array<Player> = [];
   private flowerArray: Array<BasicGameComponentModel> = [];
@@ -49,14 +51,14 @@ export class GameComponent implements OnInit {
 
   ngOnInit() {
     this.context = (this.myCanvas.nativeElement as HTMLCanvasElement).getContext('2d');
+    setInterval(this.calculateMovement, 200);
 
     this.game.gameUpdates.subscribe(msg => {
-      // console.log({ msg });
+      console.log({ msg })
       const data: ServerUpdateModel = msg;
       this.playerArray = data.players;
       this.flowerArray = data.flowers;
       this.beesArray = data.bees;
-      this.updateScore();
       this.draw();
     });
 
@@ -66,27 +68,31 @@ export class GameComponent implements OnInit {
 
     this.game.sendPlayerJoin(this.userName);
   }
-  //
-  //
-  // ngAfterViewInit(): void {
-  //   this.draw();
-  // }
-  //
-  // ngOnDestroy(): void {
-  //   this.game.sendPlayerLeave(this.userName);
-  // }
 
-  updateScore() {
+  ngOnDestroy(): void {
     if (this.player) {
-      this.playerArray.map(player => {
-        if (player.id === this.player.id) {
-          this.player = player;
-          this.score = player.points;
-        }
-      });
+      this.game.sendPlayerLeave(this.player.id);
     }
   }
+  calculateMovement() {
+    if (this.player) {
+      const serverMessage = new ServerMessage();
+      const movement = new Movement();
+      const angle = Math.atan2((this.player.ypos - this.mouseYLocation), (this.player.xpos - this.mouseXLocation));
+      const xPos = 10 * Math.cos(angle);
+      const yPos = 10 * Math.sin(angle);
 
+      serverMessage.movement = movement;
+      movement.id = this.player.id;
+      movement.xMovement = -xPos;
+      movement.yMovement = -yPos;
+
+      console.log({ serverMessage });
+      this.game.sendGameUpdates(serverMessage);
+    } else {
+      // console.log(this.player);
+    }
+  }
 
   draw() {
     const ctx = this.context;
@@ -109,6 +115,9 @@ export class GameComponent implements OnInit {
     });
 
     this.playerArray.map(player => {
+      if (player.userName === this.userName) {
+        this.player = player;
+      }
       const colors =  player.color.values();
       ctx.fillStyle = colors.next().value;
 
@@ -146,65 +155,32 @@ export class GameComponent implements OnInit {
         if (Math.abs(player.xpos - xLocation) < player.length &&
           Math.abs(player.ypos - yLocation) < player.length) {
             const attackModel = new AttackModel();
+            const serverMessage = new ServerMessage();
+
             attackModel.sender = this.player;
             attackModel.target = player;
-            const serverMessage = new ServerMessage();
             serverMessage.attack = attackModel;
+
             this.game.sendGameUpdates(serverMessage);
           }
       });
  }
 
-//  @HostListener('mousemove', ['$event'])
-//   oninput(input: MouseEvent) {
-//     const movement = new Movement();
-//     const serverMessage = new ServerMessage()
-//     serverMessage.movement = movement
-//     movement.userName = this.userName;
-//     movement.xMovement = input.movementX !== 0 ? (input.movementX > 0 ? 1 : 0) : 0;
-//     movement.yMovement = input.movementY !== 0 ? (input.movementY > 0 ? 1 : -1) : 0;
-//     this.game.sendGameUpdates(serverMessage)
-
-//     // console.log('input.movementX', movement.xMovement)
-//     // console.log('input.movementY', movement.yMovement)
-//   }
-
-  @HostListener('window:keydown', ['$event'])
-  keyEvent(event: KeyboardEvent) {
-    const movement = new Movement();
+ @HostListener('mousemove', ['$event'])
+  oninput(input: MouseEvent) {
+    this.mouseXLocation = input.clientX - this.context.canvas.getBoundingClientRect().left;
+    this.mouseYLocation = input.clientY - this.context.canvas.getBoundingClientRect().top;
     const serverMessage = new ServerMessage();
+    const movement = new Movement();
+    const angle = Math.atan2((this.player.ypos - this.mouseYLocation), (this.player.xpos - this.mouseXLocation));
+    const xPos = 2 * Math.cos(angle);
+    const yPos = 2 * Math.sin(angle);
+
     serverMessage.movement = movement;
-    const id: string = this.player.id;
+    movement.id = this.player.id;
+    movement.xMovement = -xPos;
+    movement.yMovement = -yPos;
 
-    switch (event.key) {
-      case 'ArrowDown':
-      movement.id = id;
-      movement.xMovement = 0;
-      movement.yMovement = 10;
-
-      this.game.sendGameUpdates(serverMessage);
-      break;
-
-      case 'ArrowUp':
-      movement.id = id;
-      movement.xMovement = 0;
-      movement.yMovement = -10;
-      this.game.sendGameUpdates(serverMessage);
-      break;
-
-      case 'ArrowLeft':
-      movement.id = id;
-      movement.xMovement = -10;
-      movement.yMovement = 0;
-      this.game.sendGameUpdates(serverMessage);
-      break;
-
-      case 'ArrowRight':
-      movement.id = id;
-      movement.xMovement = 10;
-      movement.yMovement = 0;
-      this.game.sendGameUpdates(serverMessage);
-      break;
-    }
+    this.game.sendGameUpdates(serverMessage);
   }
 }

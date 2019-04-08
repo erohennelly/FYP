@@ -11,11 +11,11 @@ public class AiPlayerModel extends PlayerModel {
     private  FlowerModel target = null;
 
     public AiPlayerModel() {
-        this.userName = "AI-User-" + Math.round(Math.random() * 1000);
+        this.userName = "AI-User-" + Math.round(Math.random() * 1200000);
         this.xPos = (Math.random() * 1500);
         this.yPos = (Math.random() * 700);
-        this.points = 0;
-        this.length = 15;
+        this.points = 50;
+        this.length = 20;
     }
 
     public void AIPlayersMove(double delta, FlowerModel closestFlowerToAiPlayer) {
@@ -32,5 +32,15 @@ public class AiPlayerModel extends PlayerModel {
             return distance < 100 && playerModel.getPoints() < points;
         }
         return false;
+    }
+
+    @Override
+    public void playerHit(double points, double length) {
+        this.points -= points;
+        this.length -= length;
+
+        if (this.points < 1 && this.length < 2) {
+            this.isAlive = false;
+        }
     }
 }

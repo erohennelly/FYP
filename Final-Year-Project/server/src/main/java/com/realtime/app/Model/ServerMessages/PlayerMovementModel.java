@@ -11,7 +11,7 @@ public class PlayerMovementModel {
     @JsonProperty("id")
     private String id;
     @JsonProperty("xMovement")
-    private int xMovement;
+    private double xMovement;
     @JsonProperty("yMovement")
-    private int yMovement;
+    private double yMovement;
 }

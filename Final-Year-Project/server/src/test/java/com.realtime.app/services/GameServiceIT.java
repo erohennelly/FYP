@@ -2,7 +2,6 @@ package com.realtime.app.services;
 
 import com.realtime.app.Model.BasicGameObject;
 import com.realtime.app.Model.GameStateModel;
-import com.realtime.app.Model.ServerMessages.PlayerAttackModel;
 import com.realtime.app.Model.PlayerModel;
 import com.realtime.app.Model.ServerMessages.PlayerMovementModel;
 import com.realtime.app.RealTimeServerApplication;

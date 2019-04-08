@@ -4,20 +4,12 @@ import com.google.common.base.Strings;
 import com.realtime.app.Model.*;
 import com.realtime.app.Model.ServerMessages.PlayerAttackModel;
 import com.realtime.app.Model.ServerMessages.PlayerMovementModel;
+import com.realtime.app.Storage.PlayerStorage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-
 import java.awt.geom.Point2D;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.Collections;
-import java.util.Date;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -28,6 +20,7 @@ public class GameService {
     private final int minFlowerCount = 5;
     private final int minNumPlayers = 3;
     private long millTimeAtLastUpdate = new Date().getTime();
+    final PlayerStorage playerStorage;
 
     private String[][] colorsArray = {
             {"#FFFF33", "#f4414a"},
@@ -39,7 +32,8 @@ public class GameService {
             {"#4eceb6", "#ce4ea7"},
     };
 
-    public GameService() {
+    public GameService(PlayerStorage playerStorage) {
+        this.playerStorage = playerStorage;
         gameState = new GameStateModel();
     }
 
@@ -52,7 +46,7 @@ public class GameService {
             newPlayer.setUserName(userName);
             newPlayer.setColor(randomColorGenerator());
             newPlayer.setLength(15);
-            newPlayer.setPoints(0);
+            newPlayer.setPoints(15);
 
             if (!gameState.getPlayers().containsKey(newPlayer.getUserName())) {
                 gameState.getPlayers().put(newPlayer.getId(), newPlayer);
@@ -76,12 +70,28 @@ public class GameService {
     }
 
     private String[] randomColorGenerator() {
-        int randomIndex = (int)(Math.random() * colorsArray.length);
-        return colorsArray[randomIndex];
+        List<String[]> colorsSelected = gameState.getPlayers().values().parallelStream().map(PlayerModel::getColor).collect(Collectors.toList());
+
+        for (int i = 0; i < colorsArray.length; i++) {
+            String[] color =  colorsArray[i];
+            if (!colorsSelected.contains(color))
+                return color;
+        }
+
+        return colorsArray[(int)(Math.random() * colorsArray.length)];
     }
 
     public Map<UUID, PlayerModel> removePlayer(UUID id) {
         if (id != null && gameState.getPlayers().containsKey(id)){
+            PlayerModel playerModel = gameState.getPlayers().get(id);
+            Optional<PlayerModel> oldPlayerModel = this.playerStorage.findByUserName(playerModel.getUserName());
+            if (oldPlayerModel.isPresent()) {
+                double currentPoints = playerModel.getPoints();
+                double oldTotal = oldPlayerModel.get().getTotalPoints();
+                playerModel.setTotalPoints(currentPoints + oldTotal);
+
+                this.playerStorage.save(playerModel);
+            }
             gameState.getPlayers().remove(id);
         }
         return gameState.getPlayers();
@@ -125,7 +135,9 @@ public class GameService {
     }
 
     public void processPlayerAction(PlayerAttackModel playerAttackModel) {
-        gameState.getBees().add(playerAttackModel.getSender().createBee(playerAttackModel.getTarget()));
+        BeeModel beeModel = playerAttackModel.getSender().createBee(playerAttackModel.getTarget());
+        if (beeModel != null)
+            gameState.getBees().add(beeModel);
     }
 
     private void beesMoveTowardsTarget(double delta) {
@@ -144,9 +156,6 @@ public class GameService {
         HashMap<FlowerModel, Double> flowerModelDoubleHashMap = new HashMap<>();
         ArrayList<FlowerModel> flowerModelArrayList = (ArrayList<FlowerModel>) gameState.getFlowers().clone();
         flowerModelArrayList.removeIf(flowerModel -> this.flowersToAiPlayersMapping.containsKey(flowerModel.getId()));
-
-        log.info("org {}", gameState.getFlowers().size());
-        log.info("new {}", flowerModelArrayList.size());
 
         flowerModelArrayList.forEach(flowerModel -> {
             double distance = Point2D.distance(flowerModel.getXPos(), flowerModel.getYPos(), aiPlayerModel.getXPos(), aiPlayerModel.getYPos());
@@ -181,8 +190,12 @@ public class GameService {
     public GameStateModel gameStateUpdate() {
         double delta = getTimeInMillisecondsSinceLastUpdate();
         ArrayList<FlowerModel> flowers = gameState.getFlowers();
+
         AIPlayersMove(delta);
         beesMoveTowardsTarget(delta);
+        gameState.getPlayers().values().removeIf(playerModel -> !playerModel.isAlive() ||  playerModel.getPoints() < 2);
+        gameState.getBees().removeIf(beeModel -> !beeModel.isAlive() ||  beeModel.getPoints() < 5 || !gameState.getPlayers().containsKey(beeModel.getTarget().getId()));
+        AIPlayers.removeIf(aiPlayerModel -> !aiPlayerModel.isAlive());
 
         while (flowers.size() < minFlowerCount) {
             FlowerModel flowerModel = new FlowerModel();
@@ -190,6 +203,11 @@ public class GameService {
             flowerModel.setPoints(25);
             flowers.add(flowerModel);
         }
+
+        while (gameState.getPlayers().size() < minNumPlayers) {
+            addAIPlayer();
+        }
+
         return gameState;
     }
 

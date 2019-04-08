@@ -2,9 +2,7 @@ import { Injectable } from '@angular/core';
 import * as io from 'socket.io-client';
 import { Observable } from 'rxjs';
 import * as Rx from 'rxjs';
-import { environment } from '../../environments/environment'
-import { Player } from '../models/player'
-import { Movement } from '../models/movement'
+import { environment } from '../../environments/environment';
 import { ServerMessage } from '../models/serverMessage';
 
 @Injectable({
@@ -19,53 +17,53 @@ export class WebsocketService {
   playerJoin(): Rx.Subject<MessageEvent> {
     this.socket = io(environment.ws_url);
 
-    let observable = new Observable(observer => {
+    const observable = new Observable(observer => {
       this.socket.on('setPlayer', (data) => {
-        observer.next(data)
-      })
+        observer.next(data);
+      });
       return () => {
         this.socket.disconnect();
-      }
-    })
+      };
+    });
 
-    let observer = {
+    const observer = {
       next: (data: Object) => {
-        this.socket.emit('playerJoined', data)
+        this.socket.emit('playerJoined', data);
       },
-    }
-    return Rx.Subject.create(observer, observable)
+    };
+    return Rx.Subject.create(observer, observable);
   }
 
   playerLeave(): Rx.Subject<MessageEvent> {
     this.socket = io(environment.ws_url);
 
-    let observable = new Observable(() => { this.socket.disconnect(); })
+    const observable = new Observable(() => { this.socket.disconnect(); });
 
-    let observer = {
+    const observer = {
       next: (data: Object) => {
-        this.socket.emit('playerLeft', data)
+        this.socket.emit('playerLeft', data);
       },
-    }
-    return Rx.Subject.create(observer, observable)
+    };
+    return Rx.Subject.create(observer, observable);
   }
 
   gameUpdates(): Rx.Subject<MessageEvent> {
     this.socket = io(environment.ws_url);
 
-    let observable = new Observable(observer => {
+    const observable = new Observable(observer => {
       this.socket.on('mapUpdate', (data) => {
-        observer.next(data)
-      })
+        observer.next(data);
+      });
       return () => {
         this.socket.disconnect();
-      }
-    })
+      };
+    });
 
-    let observer = {
+    const observer = {
       next: (data: ServerMessage) => {
-        this.socket.emit('updatePlayerPosition', data)
+        this.socket.emit('updatePlayerPosition', data);
       },
-    }
-    return Rx.Subject.create(observer, observable)
+    };
+    return Rx.Subject.create(observer, observable);
   }
 }

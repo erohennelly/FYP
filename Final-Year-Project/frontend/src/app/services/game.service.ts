@@ -8,25 +8,25 @@ import { ServerMessage } from '../models/serverMessage';
   providedIn: 'root'
 })
 export class GameService {
-  gameUpdates: Subject<any>
-  playerJoins: Subject<any>
-  playerLeaves: Subject<any>
+  gameUpdates: Subject<any>;
+  playerJoins: Subject<any>;
+  playerLeaves: Subject<any>;
 
   constructor(private websocketService: WebsocketService) {
-    this.gameUpdates = <Subject<any>>websocketService.gameUpdates().pipe(map((res) => res));
-    this.playerJoins = <Subject<any>>websocketService.playerJoin().pipe(map((res) => res));
-    this.playerLeaves = <Subject<any>>websocketService.playerLeave().pipe(map((res) => res));
+    this.gameUpdates = websocketService.gameUpdates().pipe(map((res) => res)) as Subject<any>;
+    this.playerJoins = websocketService.playerJoin().pipe(map((res) => res)) as Subject<any>;
+    this.playerLeaves = websocketService.playerLeave().pipe(map((res) => res)) as Subject<any>;
    }
 
-   sendGameUpdates(data: ServerMessage){
-    this.gameUpdates.next(data)
+   sendGameUpdates(data: ServerMessage) {
+    this.gameUpdates.next(data);
   }
 
-  sendPlayerJoin(data){
-    this.playerJoins.next(data)
+  sendPlayerJoin(data) {
+    this.playerJoins.next(data);
   }
 
-  sendPlayerLeave(data){
-    this.playerLeaves.next(data)
+  sendPlayerLeave(data) {
+    this.playerLeaves.next(data);
   }
 }

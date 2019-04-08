@@ -12,7 +12,7 @@ exports.config = {
     'browserName': 'chrome'
   },
   directConnect: true,
-  baseUrl: 'http://localhost:4200/',
+  baseUrl: 'http://game-env.rvikbs5tuj.us-east-2.elasticbeanstalk.com:5000/',
   framework: 'jasmine',
   jasmineNodeOpts: {
     showColors: true,

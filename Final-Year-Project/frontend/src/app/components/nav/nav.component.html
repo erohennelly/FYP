@@ -4,7 +4,10 @@
     <nav>
       <ul>
         <li><a routerLink="/">Game</a></li>
-        <li><a routerLink="/login">Login</a></li>
+        <li><a routerLink="/leaderboard">LeaderBoard</a></li>
+        <li><a routerLink="/auth/login" *ngIf="!appComponent.isLoggedIn">Login</a></li>
+        <li><a routerLink="/auth/register" *ngIf="!appComponent.isLoggedIn">Register</a></li>
+        <li><a (click)="onLogout()" *ngIf="appComponent.isLoggedIn">Logout</a></li>
       </ul>
     </nav>
   </div>
